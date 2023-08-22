@@ -1,7 +1,7 @@
 # Use an official PHP and Apache base image
 FROM php:7.4-apache
 
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="ajaythombare431@gmail.com"
 
 # Set environment variables for DVWA
 ENV MYSQL_PASS="p@ssw0rd"
