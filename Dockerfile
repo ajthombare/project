@@ -1,4 +1,4 @@
-FROM debian:9.2
+FROM debian:10
 
 LABEL maintainer "ajaythombare431@gmail.com"
 
@@ -20,7 +20,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY php.ini /etc/php5/apache2/php.ini
+COPY php.ini /etc/php 7.4/apache2/php.ini
 COPY dvwa /var/www/html
 
 COPY config.inc.php /var/www/html/config/
