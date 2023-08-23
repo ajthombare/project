@@ -1,38 +1,38 @@
-# Use an official PHP and Apache base image
-FROM php:7.4-apache
+FROM debian:9.2
 
-LABEL maintainer="ajaythombare431@gmail.com"
+LABEL maintainer "opsxcq@strm.sh"
 
-# Set environment variables for DVWA
-ENV MYSQL_PASS="p@ssw0rd"
-
-# Update packages and install necessary tools
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get upgrade -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    debconf-utils && \
+    echo mariadb-server mysql-server/root_password password vulnerables | debconf-set-selections && \
+    echo mariadb-server mysql-server/root_password_again password vulnerables | debconf-set-selections && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apache2 \
+    mariadb-server \
+    php \
+    php-mysql \
+    php-pgsql \
+    php-pear \
+    php-gd \
+    && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Clone DVWA repository from GitHub
-RUN git clone https://github.com/digininja/DVWA /var/www/html
+COPY php.ini /etc/php5/apache2/php.ini
+COPY dvwa /var/www/html
 
-# Configure Apache
-RUN echo "AllowEncodedSlashes On" >> /etc/apache2/apache2.conf && \
-    sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+COPY config.inc.php /var/www/html/config/
 
-# Enable mod_rewrite and mod_headers
-RUN a2enmod rewrite headers
+RUN chown www-data:www-data -R /var/www/html && \
+    rm /var/www/html/index.html
 
-# Create the config file with the provided defaults
-RUN cp /var/www/html/config/config.inc.php.dist /var/www/html/config/config.inc.php && \
-    sed -i "s/''/'${MYSQL_PASS}'/g" /var/www/html/config/config.inc.php
+RUN service mysql start && \
+    sleep 3 && \
+    mysql -uroot -pvulnerables -e "CREATE USER app@localhost IDENTIFIED BY 'vulnerables';CREATE DATABASE dvwa;GRANT ALL privileges ON dvwa.* TO 'app'@localhost;"
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html
-
-# Expose ports
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
-
-
+COPY main.sh /
+ENTRYPOINT ["/main.sh"]
